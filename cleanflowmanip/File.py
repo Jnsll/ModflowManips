@@ -24,11 +24,15 @@ class InputFile(File):
     def write_data(self, data):
         pass
 
-    
+
+    def create_file(self):
+        pass
+
+
 class H5File(File):
 
-    def __init__(self, file_name, file_path, model, scenario, variable, cell):
-        self.name = file_name
+    def __init__(self, file_path, model, scenario, variable, cell):
+        self.name = "SURFEX_" + str(model) + "_Cell_"+ str(cell) +"_" + str(scenario) + ".h5"
         self.path = file_path
         self.model = model
         self.scenario = scenario
@@ -56,13 +60,12 @@ class H5File(File):
         
         # Updating file with names of reference input files
         file_references_chronicles = pd.read_csv(os.path.join("/DATA/These/Projects/modflops/docker-simulation/modflow", "data", "chronicles.txt"), sep=",")
-        #print(file_references_chronicles["template"].tolist())
         if file_name in file_references_chronicles["template"].tolist():
             print("File '" + file_name + "' has already been stored.")
         else:
             row= {"number":len(file_references_chronicles), "chronicle": "GIEC_" + str(self.model) + "_" + str(self.variable) + "_" + str(self.scenario) + "_Cell" + str(self.cell), "template" : file_name}
             file_references_chronicles = file_references_chronicles.append(row, ignore_index=True)
-            print(file_references_chronicles)
+            #print(file_references_chronicles)
             file_references_chronicles.to_csv(os.path.join("/DATA/These/Projects/modflops/docker-simulation/modflow", "data", "chronicles.txt"), sep=",", index=False)
 
 

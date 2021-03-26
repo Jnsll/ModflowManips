@@ -2,11 +2,13 @@
 
 from File import H5File 
 
-f = H5File("test_June_IPS1_Cell_1_RCP4-5.h5", r"/run/media/jnsll/Seagate Expansion Drive/SURFEX_OSUR/SURFEX/OUT", "IPS1", "RCP4.5", "REC", 1)
+for scenario in ["RCP2.6", "RCP4.5", "RCP8.5"]: 
+    for cell in [1, 888, 2108, 5021, 7288, 8510]:
 
-f.retrieve_data()
-f.format_data()
+        f = H5File(r"/run/media/jnsll/Seagate Expansion Drive/SURFEX_OSUR/SURFEX/OUT", "IPS1", scenario, "REC", cell)
 
-data = f.get_formatted_data()
-print(data)
-f.store_formatted_data_into_txt_file()
+        f.retrieve_data()
+        f.format_data()
+
+        data = f.get_formatted_data()
+        f.store_formatted_data_into_txt_file()
