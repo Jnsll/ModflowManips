@@ -56,7 +56,7 @@ class H5File(File):
             self.formatted_data = self.formatted_data.append(row, ignore_index=True)
             nb_stress_period += 1
 
-    def store_formatted_data_into_txt_file(self):
+    def store_formatted_data_into_reference_file(self):
         reference_file_name = self.create_reference_file()
         self.update_chronicles_file_with_reference_file_name(reference_file_name)        
 

@@ -10,5 +10,5 @@ for scenario in ["RCP2.6", "RCP4.5", "RCP8.5"]:
         f.retrieve_data()
         f.format_data()
 
-        data = f.get_formatted_data()
-        f.store_formatted_data_into_txt_file()
+        #data = f.get_formatted_data()
+        f.store_formatted_data_into_reference_file()
