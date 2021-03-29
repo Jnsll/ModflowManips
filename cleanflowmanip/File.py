@@ -8,8 +8,6 @@ class File:
         self.path = file_path
 
 
-
-
 class InputFile(File):
 
     def __init__(self, file_name, file_path, approximation, chronicle, reference, rate):
@@ -43,31 +41,43 @@ class H5File(File):
         self.raw_data = pd.read_hdf(self.path  + "/" + self.name, self.model + '/' + self.variable + '/' + self.scenario)
 
     def format_data(self):
-        formatted_data = pd.DataFrame(columns=["stress_period", "sp_length", "time_step", "study (0 : TS or 1 : SS)", "rech"])
+        self.formatted_data = pd.DataFrame(columns=["stress_period", "sp_length", "time_step", "study (0 : TS or 1 : SS)", "rech"])
+        self.set_first_row_of_formatted_data()
+        self.fill_rows_of_formatted_data_dataframe()
+
+    def set_first_row_of_formatted_data(self):
         row = {"stress_period": 0, "sp_length": 1, "time_step":1, "study (0 : TS or 1 : SS)": 1, "rech":float(0.00000)}
-        formatted_data = formatted_data.append(row, ignore_index=True)
+        self.formatted_data = self.formatted_data.append(row, ignore_index=True)
+
+    def fill_rows_of_formatted_data_dataframe(self):
         nb_stress_period = 1
-        for val in self.raw_data["2010-01-01":"2059-12-31"].englobe: #2059-12-31 included
-            row = {"stress_period": nb_stress_period, "sp_length": 1, "time_step":1, "study (0 : TS or 1 : SS)":0, "rech":float(val)/1000}
-            formatted_data = formatted_data.append(row, ignore_index=True)
-            #print(formatted_data)
-            nb_stress_period +=1
-        self.formatted_data = formatted_data
-        
+        for value in self.raw_data["2010-01-01":"2059-12-31"].englobe: #2059-12-31 included
+            row = {"stress_period": nb_stress_period, "sp_length": 1, "time_step":1, "study (0 : TS or 1 : SS)":0, "rech":float(value)/1000}
+            self.formatted_data = self.formatted_data.append(row, ignore_index=True)
+            nb_stress_period += 1
+
     def store_formatted_data_into_txt_file(self):
+        reference_file_name = self.create_reference_file()
+        self.update_chronicles_file_with_reference_file_name(reference_file_name)        
+
+    def create_reference_file(self):
         file_name = "input_file_" + str(self.model) + "_" + str(self.variable) + "_" + str(self.scenario) + "_Cell" + str(self.cell) + ".txt"
         self.formatted_data.to_csv("/DATA/These/Projects/modflops/docker-simulation/modflow/data/" + file_name, sep="\t", index=False)
-        
+        return file_name
+
+    def update_chronicles_file_with_reference_file_name(self, reference_file_name):
+        #reference_file_name = self.get_reference_file_name()
         # Updating file with names of reference input files
         file_references_chronicles = pd.read_csv(os.path.join("/DATA/These/Projects/modflops/docker-simulation/modflow", "data", "chronicles.txt"), sep=",")
-        if file_name in file_references_chronicles["template"].tolist():
-            print("File '" + file_name + "' has already been stored.")
+        if reference_file_name in file_references_chronicles["template"].tolist():
+            print("File '" + reference_file_name + "' has already been stored.")
         else:
-            row= {"number":len(file_references_chronicles), "chronicle": "GIEC_" + str(self.model) + "_" + str(self.variable) + "_" + str(self.scenario) + "_Cell" + str(self.cell), "template" : file_name}
+            row = {"number":len(file_references_chronicles), "chronicle": "GIEC_" + str(self.model) + "_" + str(self.variable) + "_" + str(self.scenario) + "_Cell" + str(self.cell), "template" : reference_file_name}
             file_references_chronicles = file_references_chronicles.append(row, ignore_index=True)
-            #print(file_references_chronicles)
             file_references_chronicles.to_csv(os.path.join("/DATA/These/Projects/modflops/docker-simulation/modflow", "data", "chronicles.txt"), sep=",", index=False)
 
+    def get_reference_file_name(self):
+        return "input_file_" + str(self.model) + "_" + str(self.variable) + "_" + str(self.scenario) + "_Cell" + str(self.cell) + ".txt"
 
     def get_formatted_data(self):
         formatted_data = self.formatted_data
