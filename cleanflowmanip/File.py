@@ -15,7 +15,7 @@ class File:
     def set_modflow_app_folder_path(self, modflow_app_folder_path):
         self.modflow_folder_path = modflow_app_folder_path
 
-class InputFile(File):
+class SimuInputFile(File):
 
     def __init__(self, approximation, chronicle, reference, rate):
         self.approximation = approximation
@@ -23,13 +23,12 @@ class InputFile(File):
         self.reference = reference
         self.rate = rate
 
-
-    def generate_custom_input_file(self, model_name, input_name, steady):
+    def generate_custom_input_file(self, custom_name, input_name, steady):
         chronicle_file = pd.read_table(os.path.join(self.modflow_folder_path, "data", "chronicles.txt"), sep=',', header=0, index_col=0) #"/DATA/These/Projects/modflops/docker-simulation/modflow"
         reference_file = chronicle_file.template[self.chronicle]
         self.manipulate_ref_input_file(reference_file, steady)
-        model_name = self.get_model_name(model_name)
-        self.write_custom_input_file(model_name)
+        custom_name = self.get_custom_name(custom_name)
+        self.write_custom_input_file(custom_name)
 
     def manipulate_ref_input_file(self, reference_file_name, steady_simulation): #, periodValue
         self.reference_data = self.extract_df_from_ref_input_file(reference_file_name)
@@ -126,13 +125,13 @@ class InputFile(File):
 
         self.custom_data.drop(self.custom_data.index[index_remove], inplace=True)
 
-    def get_model_name(self, model_name):
-        if model_name is None:
-            model_name = "Step1_Chronicle" + str(self.chronicle) + "_Approx" + str(self.approximation) + "_Period" + str(self.rate)
-        return model_name
+    def get_custom_name(self, custom_name):
+        if custom_name is None:
+            custom_name = "Step1_Chronicle" + str(self.chronicle) + "_Approx" + str(self.approximation) + "_Period" + str(self.rate)
+        return custom_name
 
-    def write_custom_input_file(self, model_name):
-        output_name = "input_file_" + model_name + ".txt"
+    def write_custom_input_file(self, custom_name):
+        output_name = "input_file_" + custom_name + ".txt"
         file_path = os.path.join(self.modflow_folder_path, "data", output_name)
         self.custom_data.to_csv(file_path, sep="\t", index=False)
         self.name = output_name
@@ -195,3 +194,21 @@ class H5File(File):
     def get_formatted_data(self):
         formatted_data = self.formatted_data
         return formatted_data
+
+
+class PredInputFile(File):
+
+
+    """
+        inputs : 
+        - Geomorph_Features_All_Sites_Saturation_SubCatch.csv  (constructed with geomorph_features_sites.Geomoph_crits_sub_file() in LAPrediction)
+        - simu_name + "_Ref_" + ref_name + "_errorsresult_H_BVE_SUB.csv"
+
+        outputs:
+        - "DataInputPred_SUB_Chronicle" +  str(chronicle) + ".csv"
+
+
+    """
+
+    def __init__(self):
+        pass
