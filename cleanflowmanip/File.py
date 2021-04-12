@@ -17,13 +17,23 @@ class File:
 
 class SimuInputFile(File):
 
+    """
+        Attributes:
+        - approximation
+        - chronicle : int
+        - reference : boolean
+        - rate : int
+        - reference_data : DataFrame
+
+    """
+
     def __init__(self, approximation, chronicle, reference, rate):
         self.approximation = approximation
         self.chronicle = chronicle
         self.reference = reference
         self.rate = rate
 
-    def generate_custom_input_file(self, custom_name, input_name, steady):
+    def generate_custom_input_file(self, custom_name=None, steady=False):
         chronicle_file = pd.read_table(os.path.join(self.modflow_folder_path, "data", "chronicles.txt"), sep=',', header=0, index_col=0) #"/DATA/These/Projects/modflops/docker-simulation/modflow"
         reference_file = chronicle_file.template[self.chronicle]
         self.manipulate_ref_input_file(reference_file, steady)
