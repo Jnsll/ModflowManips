@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import os
+import statistics
 
 class File:
 
@@ -212,6 +213,7 @@ class PredInputFile(File):
     """
         inputs : 
         - Geomorph_Features_All_Sites_Saturation_SubCatch.csv  (constructed with geomorph_features_sites.Geomoph_crits_sub_file() in LAPrediction)
+        - criteria of chronicles 
         - simu_name + "_Ref_" + ref_name + "_errorsresult_H_BVE_SUB.csv"
 
         outputs:
@@ -222,3 +224,52 @@ class PredInputFile(File):
 
     def __init__(self):
         pass
+
+
+class ChronicleCriteriaFile(File):
+
+    """
+
+        - chronicles : list of chronicle numbers
+
+    """
+
+    def __init__(self, lap_folder, chronicles):
+        self.chronicles = chronicles # range(10, 28)
+        self.lap_folder = lap_folder  #"/DATA/These/Projects/LAPrediction"
+
+
+    def create_chronicle_file(self):
+        criteria = pd.DataFrame(columns=["Chronicle", "MeanPerDay", "MeanPerMonth", "MeanPerTrim", "MeanPerSem", "MeanPerYear", "MeanPerDecade"])
+
+        for chronicle in self.chronicles: #range(10, 28)
+            chronicle_file = pd.read_table("/DATA/These/Projects/modflops/docker-simulation/modflow/" + "data/chronicles.txt", sep=',', header=0, index_col=0)
+            input_file = chronicle_file.template[chronicle]
+            df = pd.read_csv("/DATA/These/Projects/modflops/docker-simulation/modflow/" + "data/" + input_file, sep='\t', dtype=np.float64)
+            rech_all_transitory = df[1:]['rech']
+            mean_per_day = rech_all_transitory.mean()
+            mean_per_month = self.get_rech_per_period(30)
+            mean_per_trim = self.get_rech_per_period(90)
+            mean_per_sem = self.get_rech_per_period(182)
+            mean_per_year = self.get_rech_per_period(365)
+            mean_per_decade = self.get_rech_per_period(3652)
+            #print(mean_per_trim, mean_per_sem, mean_per_year, mean_per_decade)
+            means = {"Chronicle" : chronicle, "MeanPerDay": mean_per_day, "MeanPerMonth":mean_per_month, "MeanPerTrim":mean_per_trim, "MeanPerSem":mean_per_sem, "MeanPerYear":mean_per_year, "MeanPerDecade":mean_per_decade}
+            criteria = criteria.append(means, ignore_index=True)
+
+        criteria.to_csv(self.lap_folder + "/outputs/" + "Chronicles_criteria.csv", index=False, sep=",") 
+
+    def get_rech_per_period(self, period):
+        day_start_month = 1
+        rech_month = []
+        while day_start_month < 18262:
+            #print(day_start_month)
+            if (18262-day_start_month) > period:
+                mean_month = df[day_start_month:day_start_month+period]['rech'].sum()
+                rech_month.append(mean_month)
+            # else:
+            #     rech_month.append(df[day_start_month:]['rech'])
+            day_start_month += period
+
+        rech_per_month = statistics.mean(rech_month)
+        return rech_per_month

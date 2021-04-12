@@ -19,3 +19,5 @@ from File import SimuInputFile
 # simu = SimuInputFile(0, 27, False, 18)
 # simu.set_modflow_app_folder_path(r"/DATA/These/Projects/modflops/docker-simulation/modflow")
 # simu.generate_custom_input_file()
+
+
