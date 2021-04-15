@@ -240,7 +240,7 @@ class ChronicleCriteriaFile(File):
 
 
     def create_chronicle_file(self):
-        criteria = pd.DataFrame(columns=["Chronicle", "MeanPerDay", "MeanPerMonth", "MeanPerTrim", "MeanPerSem", "MeanPerYear", "MeanPerDecade"])
+        criteria = pd.DataFrame(columns=["Chronicle", "MeanPerDay", "MeanPerMonth", "MeanPerTrim", "MeanPerSem", "MeanPerYear", "MeanPerDecade", "Sum"])
 
         for chronicle in self.chronicles: #range(10, 28)
             chronicle_file = pd.read_table("/DATA/These/Projects/modflops/docker-simulation/modflow/" + "data/chronicles.txt", sep=',', header=0, index_col=0)
@@ -248,24 +248,25 @@ class ChronicleCriteriaFile(File):
             df = pd.read_csv("/DATA/These/Projects/modflops/docker-simulation/modflow/" + "data/" + input_file, sep='\t', dtype=np.float64)
             rech_all_transitory = df[1:]['rech']
             mean_per_day = rech_all_transitory.mean()
-            mean_per_month = self.get_rech_per_period(30)
-            mean_per_trim = self.get_rech_per_period(90)
-            mean_per_sem = self.get_rech_per_period(182)
-            mean_per_year = self.get_rech_per_period(365)
-            mean_per_decade = self.get_rech_per_period(3652)
+            mean_per_month = self.get_rech_per_period(df, 30)
+            mean_per_trim = self.get_rech_per_period(df, 90)
+            mean_per_sem = self.get_rech_per_period(df, 182)
+            mean_per_year = self.get_rech_per_period(df, 365)
+            mean_per_decade = self.get_rech_per_period(df, 3652)
+            sum_rech = rech_all_transitory.sum()
             #print(mean_per_trim, mean_per_sem, mean_per_year, mean_per_decade)
-            means = {"Chronicle" : chronicle, "MeanPerDay": mean_per_day, "MeanPerMonth":mean_per_month, "MeanPerTrim":mean_per_trim, "MeanPerSem":mean_per_sem, "MeanPerYear":mean_per_year, "MeanPerDecade":mean_per_decade}
+            means = {"Chronicle" : chronicle, "MeanPerDay": mean_per_day, "MeanPerMonth":mean_per_month, "MeanPerTrim":mean_per_trim, "MeanPerSem":mean_per_sem, "MeanPerYear":mean_per_year, "MeanPerDecade":mean_per_decade, "Sum": sum_rech}
             criteria = criteria.append(means, ignore_index=True)
 
         criteria.to_csv(self.lap_folder + "/outputs/" + "Chronicles_criteria.csv", index=False, sep=",") 
 
-    def get_rech_per_period(self, period):
+    def get_rech_per_period(self, data, period):
         day_start_month = 1
         rech_month = []
         while day_start_month < 18262:
             #print(day_start_month)
             if (18262-day_start_month) > period:
-                mean_month = df[day_start_month:day_start_month+period]['rech'].sum()
+                mean_month = data[day_start_month:day_start_month+period]['rech'].sum()
                 rech_month.append(mean_month)
             # else:
             #     rech_month.append(df[day_start_month:]['rech'])
@@ -273,3 +274,33 @@ class ChronicleCriteriaFile(File):
 
         rech_per_month = statistics.mean(rech_month)
         return rech_per_month
+
+
+
+class IgridaParamsLaunchFile(File):
+
+    """
+        Attributes:
+        - site_number: int
+        - chronicle_number: int
+        - approximation : int
+        - permeability: float
+
+    """
+
+    def __init__(self, site_number, chronicle_number, approximation, permeability):
+        self.site_number = site_number
+        self.chronicle_number = chronicle_number
+        self.approximation = approximation
+        self.permeability = permeability
+
+    
+    def generate_giec_file_for_a_site(self):
+        with open(self.modflow_folder_path + "/scripts/" + 'params_site' + str(self.site_number) + "_chrs_giec" + '.txt', 'w') as f:
+            for chronicle in range(10, 28):
+                for rate in [0, 2, 7, 15, 21, 30, 45, 50, 60, 75, 90, 100, 125, 150, 182, 200, 250, 300, 330, 365, 550, 640, 730, 1000, 1500, 2000, 2250, 3000, 3182, 3652]:
+                    if rate == 0:
+                        f.write("%s %s %s %s %s %s %s %s %s\n" % (self.site_number, chronicle, self.approximation, rate, 1, self.permeability, 0, 0, 0))
+                    else:
+                        f.write("%s %s %s %s %s %s %s %s %s\n" % (self.site_number, chronicle, self.approximation, rate, 0, self.permeability, 0, 0, 0))
+        print("File: ", self.modflow_folder_path + "/scripts/" + 'params_site' + str(self.site_number) + "_chrs_giec" + '.txt', " created!")
