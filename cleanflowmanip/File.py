@@ -304,3 +304,7 @@ class IgridaParamsLaunchFile(File):
                     else:
                         f.write("%s %s %s %s %s %s %s %s %s\n" % (self.site_number, chronicle, self.approximation, rate, 0, self.permeability, 0, 0, 0))
         print("File: ", self.modflow_folder_path + "/scripts/" + 'params_site' + str(self.site_number) + "_chrs_giec" + '.txt', " created!")
+
+
+    def generate_from_inspection(self):
+        pass

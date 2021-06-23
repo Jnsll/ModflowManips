@@ -27,7 +27,7 @@ from File import IgridaParamsLaunchFile
 # chronicle_crits.create_chronicle_file()
 
 
-for site_number in range(1, 15):
+for site_number in range(29, 41):
     launch_file = IgridaParamsLaunchFile(site_number, None, 0, 27.32)
     launch_file.set_modflow_app_folder_path(r"/DATA/These/Projects/modflops")
     launch_file.generate_giec_file_for_a_site()
